@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore BigQuery release notes, filter by type, and tweet about updates instantly with a beautiful dark-mode interface.">
+    <title>BigQuery Release Radar</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
+                </svg>
+                <div class="logo-text">
+                    <h1>BigQuery</h1>
+                    <span>Release Radar</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <span id="sync-status" class="sync-status">Syncing...</span>
+                <button id="refresh-btn" class="btn btn-primary" title="Refresh Release Notes">
+                    <svg class="icon spinner-icon" id="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                    </svg>
+                    <span>Refresh</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Bar -->
+        <section class="stats-bar" id="stats-bar">
+            <div class="stat-card">
+                <span class="stat-label">Total Updates</span>
+                <span class="stat-value" id="stat-total">-</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-card">
+                <span class="stat-label">Features</span>
+                <span class="stat-value text-feature" id="stat-features">-</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-card">
+                <span class="stat-label">Issues</span>
+                <span class="stat-value text-issue" id="stat-issues">-</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-card">
+                <span class="stat-label">Other Updates</span>
+                <span class="stat-value text-other" id="stat-other">-</span>
+            </div>
+        </section>
+
+        <!-- Main Layout -->
+        <main class="main-content">
+            <!-- Left Panel: Release Notes Grid -->
+            <section class="releases-panel">
+                <div class="panel-header">
+                    <h2>Latest Updates</h2>
+                    <div class="filter-controls">
+                        <div class="search-box">
+                            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="search-input" placeholder="Search updates...">
+                        </div>
+                        <div class="filter-buttons" id="filter-buttons">
+                            <button class="btn-filter active" data-filter="all">All</button>
+                            <button class="btn-filter" data-filter="Feature">Features</button>
+                            <button class="btn-filter" data-filter="Issue">Issues</button>
+                            <button class="btn-filter" data-filter="Changed">Changed</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loading-state" id="loading-state">
+                    <div class="spinner-large"></div>
+                    <p>Loading BigQuery Release Notes...</p>
+                </div>
+
+                <!-- Error State -->
+                <div class="error-state" id="error-state" style="display: none;">
+                    <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <h3>Failed to load release notes</h3>
+                    <p id="error-message">Unknown error occurred</p>
+                    <button class="btn btn-secondary" id="retry-btn">Retry</button>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    <h3>No matching updates found</h3>
+                    <p>Try adjusting your search query or filters.</p>
+                </div>
+
+                <!-- Release Notes List -->
+                <div class="updates-list" id="updates-list" style="display: none;">
+                    <!-- Dynamically populated -->
+                </div>
+            </section>
+
+            <!-- Right Panel: Tweet Composer -->
+            <aside class="tweet-panel">
+                <div class="tweet-card-sticky">
+                    <div class="panel-header">
+                        <h2>Tweet Composer</h2>
+                    </div>
+
+                    <!-- Composer Empty State -->
+                    <div class="composer-empty" id="composer-empty">
+                        <div class="composer-empty-graphic">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
+                            </svg>
+                        </div>
+                        <h3>No update selected</h3>
+                        <p>Select any BigQuery update card on the left to automatically draft and share a tweet about it.</p>
+                    </div>
+
+                    <!-- Composer Active State -->
+                    <div class="composer-active" id="composer-active" style="display: none;">
+                        <!-- Twitter UI Preview Mockup -->
+                        <div class="twitter-mock">
+                            <div class="twitter-header">
+                                <div class="twitter-avatar">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.3 19.2 6.9 17.8 5.5 15.7C5.55 13.5 9.9 12.3 12 12.3C14.1 12.3 18.45 13.5 18.5 15.7C17.1 17.8 14.7 19.2 12 19.2Z"/>
+                                    </svg>
+                                </div>
+                                <div class="twitter-user-info">
+                                    <span class="twitter-name">BigQuery Release Radar</span>
+                                    <span class="twitter-handle">@bq_radar</span>
+                                </div>
+                            </div>
+                            
+                            <div class="twitter-body">
+                                <textarea id="tweet-textarea" class="tweet-textarea" rows="7" placeholder="Compose your tweet..."></textarea>
+                            </div>
+                            
+                            <!-- Card Preview Link Mock -->
+                            <div class="twitter-card-preview" id="twitter-card-preview">
+                                <div class="preview-domain">cloud.google.com</div>
+                                <div class="preview-title" id="preview-card-title">BigQuery Release Notes</div>
+                                <div class="preview-description">Official release notes and updates for Google Cloud BigQuery.</div>
+                            </div>
+
+                            <div class="twitter-footer">
+                                <div class="tweet-char-count">
+                                    <svg class="progress-ring" width="24" height="24">
+                                        <circle class="progress-ring__circle-bg" stroke="#2f3336" stroke-width="2" fill="transparent" r="10" cx="12" cy="12"/>
+                                        <circle class="progress-ring__circle" id="char-progress" stroke="#1d9bf0" stroke-width="2" fill="transparent" r="10" cx="12" cy="12"/>
+                                    </svg>
+                                    <span id="char-count-text">280</span>
+                                </div>
+                                <div class="composer-actions">
+                                    <button class="btn btn-secondary btn-icon-only" id="copy-tweet-btn" title="Copy Text to Clipboard">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="btn btn-twitter" id="tweet-submit-btn">
+                                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
+                                        </svg>
+                                        <span>Tweet Update</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Info Note -->
+                        <div class="composer-info">
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            <p>Clicking "Tweet Update" will open Twitter web intent in a new tab with your prefilled text.</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">
+        <span id="toast-message">Message copied!</span>
+    </div>
+
+    <!-- Script -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
