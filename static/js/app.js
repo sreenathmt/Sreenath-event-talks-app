@@ -191,22 +191,25 @@ function clearSearch() {
     searchInput.focus();
 }
 
+// Helper to evaluate if an update matches the current category filter
+function matchesFilterCriteria(update, filter) {
+    if (filter === 'all') {
+        return true;
+    } else if (filter === 'other') {
+        const typeLower = update.type.toLowerCase();
+        return typeLower !== 'feature' && typeLower !== 'issue';
+    } else {
+        return update.type.toLowerCase() === filter.toLowerCase();
+    }
+}
+
 // Filter and Render updates list
 function filterAndDisplayUpdates() {
     const query = appState.searchQuery;
     const filter = appState.currentFilter;
     
     const filtered = appState.updates.filter(update => {
-        // Filter by Tag (Total, Feature, Issue, or "Other")
-        let matchesFilter = false;
-        if (filter === 'all') {
-            matchesFilter = true;
-        } else if (filter === 'other') {
-            const typeLower = update.type.toLowerCase();
-            matchesFilter = typeLower !== 'feature' && typeLower !== 'issue' && typeLower !== 'changed' && typeLower !== 'deprecated';
-        } else {
-            matchesFilter = update.type.toLowerCase() === filter.toLowerCase();
-        }
+        const matchesFilter = matchesFilterCriteria(update, filter);
         
         // Filter by Search Query
         const textToSearch = `${update.date} ${update.type} ${update.text_content}`.toLowerCase();
@@ -522,7 +525,7 @@ function exportToCSV() {
     
     // Filter the items just like we do for display
     const filtered = appState.updates.filter(update => {
-        const matchesFilter = filter === 'all' || update.type.toLowerCase() === filter.toLowerCase();
+        const matchesFilter = matchesFilterCriteria(update, filter);
         const textToSearch = `${update.date} ${update.type} ${update.text_content}`.toLowerCase();
         const matchesQuery = !query || textToSearch.includes(query);
         return matchesFilter && matchesQuery;
@@ -600,16 +603,7 @@ function handleKeyboardNavigation(e) {
     const filter = appState.currentFilter;
     
     const filtered = appState.updates.filter(update => {
-        let matchesFilter = false;
-        if (filter === 'all') {
-            matchesFilter = true;
-        } else if (filter === 'other') {
-            const typeLower = update.type.toLowerCase();
-            matchesFilter = typeLower !== 'feature' && typeLower !== 'issue' && typeLower !== 'changed' && typeLower !== 'deprecated';
-        } else {
-            matchesFilter = update.type.toLowerCase() === filter.toLowerCase();
-        }
-        
+        const matchesFilter = matchesFilterCriteria(update, filter);
         const textToSearch = `${update.date} ${update.type} ${update.text_content}`.toLowerCase();
         const matchesQuery = !query || textToSearch.includes(query);
         
