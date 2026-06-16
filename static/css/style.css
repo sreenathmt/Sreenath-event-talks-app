@@ -1000,3 +1000,105 @@ h1, h2, h3, h4, h5, h6 {
         text-align: center;
     }
 }
+
+/* Light Theme Variables Overrides */
+body.light-theme {
+    --bg-primary: #f6f8fa;
+    --bg-secondary: #ffffff;
+    --bg-glass: rgba(255, 255, 255, 0.75);
+    --border-glass: rgba(27, 31, 36, 0.12);
+    --border-glass-hover: rgba(27, 31, 36, 0.25);
+    
+    --text-primary: #1F2328;
+    --text-secondary: #475569;
+    --text-muted: #64748B;
+    
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
+    --shadow-lg: 0 12px 24px rgba(0,0,0,0.08);
+    --shadow-glow: 0 0 15px rgba(59, 130, 246, 0.06);
+    
+    background-color: #f3f4f6;
+}
+
+body.light-theme .bg-glow {
+    opacity: 0.05;
+}
+
+/* Light Theme overrides for the Twitter composer card */
+body.light-theme .twitter-mock {
+    background: #ffffff;
+    border: 1px solid #e1e8ed;
+}
+
+body.light-theme .twitter-name {
+    color: #0f1419;
+}
+
+body.light-theme .twitter-handle {
+    color: #536471;
+}
+
+body.light-theme .tweet-textarea {
+    color: #0f1419;
+}
+
+body.light-theme .twitter-card-preview {
+    border: 1px solid #e1e8ed;
+    background: #f7f9f9;
+}
+
+body.light-theme .twitter-card-preview:hover {
+    background: #eff1f1;
+}
+
+body.light-theme .preview-title {
+    color: #0f1419;
+}
+
+body.light-theme .preview-description {
+    color: #536471;
+}
+
+body.light-theme .twitter-footer {
+    border-top: 1px solid #e1e8ed;
+}
+
+body.light-theme .tweet-char-count {
+    color: #536471;
+}
+
+body.light-theme .progress-ring__circle-bg {
+    stroke: #eff3f4;
+}
+
+body.light-theme .update-card.selected {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: var(--accent-blue);
+}
+
+body.light-theme .filter-buttons {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-theme .btn-filter.active {
+    background: #ffffff;
+    color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+body.light-theme .search-box input {
+    background: #ffffff;
+}
+
+body.light-theme .search-box input:focus {
+    background: #ffffff;
+}
+
+/* Theme Toggle Button Icon Visibility */
+#theme-toggle-btn .sun-icon { display: inline-block; }
+#theme-toggle-btn .moon-icon { display: none; }
+
+body.light-theme #theme-toggle-btn .sun-icon { display: none; }
+body.light-theme #theme-toggle-btn .moon-icon { display: inline-block; }
+

@@ -1,3 +1,8 @@
+// Load theme immediately to prevent flashing of unstyled content (FOUC)
+if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-theme');
+}
+
 // Global Application State
 let appState = {
     updates: [],
@@ -17,6 +22,7 @@ const CIRCUMFERENCE = 2 * Math.PI * 10; // r=10 => ~62.83
 
 // DOM Elements
 const refreshBtn = document.getElementById('refresh-btn');
+const themeToggleBtn = document.getElementById('theme-toggle-btn');
 const exportCsvBtn = document.getElementById('export-csv-btn');
 const spinner = document.getElementById('spinner');
 const syncStatus = document.getElementById('sync-status');
@@ -61,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event Listeners
     refreshBtn.addEventListener('click', () => loadReleaseNotes(true));
+    themeToggleBtn.addEventListener('click', toggleTheme);
     exportCsvBtn.addEventListener('click', exportToCSV);
     retryBtn.addEventListener('click', () => loadReleaseNotes(true));
     searchInput.addEventListener('input', handleSearch);
@@ -505,4 +512,12 @@ function exportToCSV() {
     document.body.removeChild(link);
     
     showToast("CSV exported successfully!");
+}
+
+// Toggle page color scheme between dark and light themes
+function toggleTheme() {
+    document.body.classList.toggle('light-theme');
+    const isLight = document.body.classList.contains('light-theme');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    showToast(`${isLight ? 'Light' : 'Dark'} theme activated!`);
 }
