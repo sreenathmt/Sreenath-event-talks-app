@@ -67,22 +67,22 @@
 
         <!-- Stats Bar -->
         <section class="stats-bar" id="stats-bar">
-            <div class="stat-card">
+            <div class="stat-card" id="stat-card-total" title="Filter by All Updates">
                 <span class="stat-label">Total Updates</span>
                 <span class="stat-value" id="stat-total">-</span>
             </div>
             <div class="stat-divider"></div>
-            <div class="stat-card">
+            <div class="stat-card" id="stat-card-features" title="Filter by Features">
                 <span class="stat-label">Features</span>
                 <span class="stat-value text-feature" id="stat-features">-</span>
             </div>
             <div class="stat-divider"></div>
-            <div class="stat-card">
+            <div class="stat-card" id="stat-card-issues" title="Filter by Issues">
                 <span class="stat-label">Issues</span>
                 <span class="stat-value text-issue" id="stat-issues">-</span>
             </div>
             <div class="stat-divider"></div>
-            <div class="stat-card">
+            <div class="stat-card" id="stat-card-other" title="Filter by Other Updates">
                 <span class="stat-label">Other Updates</span>
                 <span class="stat-value text-other" id="stat-other">-</span>
             </div>
@@ -101,6 +101,7 @@
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
                             <input type="text" id="search-input" placeholder="Search updates...">
+                            <button id="search-clear-btn" class="search-clear-btn" style="display: none;" title="Clear Search">&times;</button>
                         </div>
                         <div class="filter-buttons" id="filter-buttons">
                             <button class="btn-filter active" data-filter="all">All</button>
@@ -199,6 +200,11 @@
                                     <span id="char-count-text">280</span>
                                 </div>
                                 <div class="composer-actions">
+                                    <button class="btn btn-secondary btn-icon-only" id="reset-tweet-btn" title="Reset to Default Draft">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                                        </svg>
+                                    </button>
                                     <button class="btn btn-secondary btn-icon-only" id="copy-tweet-btn" title="Copy Text to Clipboard">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>

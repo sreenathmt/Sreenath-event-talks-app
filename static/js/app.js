@@ -39,6 +39,18 @@ const statFeatures = document.getElementById('stat-features');
 const statIssues = document.getElementById('stat-issues');
 const statOther = document.getElementById('stat-other');
 
+// Stats Card Containers (for click filtering)
+const statCardTotal = document.getElementById('stat-card-total');
+const statCardFeatures = document.getElementById('stat-card-features');
+const statCardIssues = document.getElementById('stat-card-issues');
+const statCardOther = document.getElementById('stat-card-other');
+
+// Search Clear Button
+const searchClearBtn = document.getElementById('search-clear-btn');
+
+// Reset Tweet Button
+const resetTweetBtn = document.getElementById('reset-tweet-btn');
+
 // Search & Filter DOM Elements
 const searchInput = document.getElementById('search-input');
 const filterButtons = document.querySelectorAll('.btn-filter');
@@ -70,7 +82,24 @@ document.addEventListener('DOMContentLoaded', () => {
     themeToggleBtn.addEventListener('click', toggleTheme);
     exportCsvBtn.addEventListener('click', exportToCSV);
     retryBtn.addEventListener('click', () => loadReleaseNotes(true));
+    
+    // Search input and clear button
     searchInput.addEventListener('input', handleSearch);
+    searchClearBtn.addEventListener('click', clearSearch);
+    
+    // Reset Composer button
+    resetTweetBtn.addEventListener('click', () => {
+        if (appState.selectedUpdateId) {
+            selectUpdate(appState.selectedUpdateId);
+            showToast("Tweet draft reset to default!");
+        }
+    });
+    
+    // Interactive Stats Cards
+    statCardTotal.addEventListener('click', () => triggerCategoryFilter('all'));
+    statCardFeatures.addEventListener('click', () => triggerCategoryFilter('Feature'));
+    statCardIssues.addEventListener('click', () => triggerCategoryFilter('Issue'));
+    statCardOther.addEventListener('click', () => triggerCategoryFilter('other'));
     
     filterButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -84,6 +113,9 @@ document.addEventListener('DOMContentLoaded', () => {
     tweetTextarea.addEventListener('input', updateCharCount);
     tweetSubmitBtn.addEventListener('click', postTweet);
     copyTweetBtn.addEventListener('click', copyTweetText);
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', handleKeyboardNavigation);
 });
 
 // Fetch & Parse Release Notes from API
@@ -147,7 +179,16 @@ function calculateStats() {
 // Search Logic
 function handleSearch(e) {
     appState.searchQuery = e.target.value.toLowerCase();
+    searchClearBtn.style.display = appState.searchQuery ? 'flex' : 'none';
     filterAndDisplayUpdates();
+}
+
+function clearSearch() {
+    searchInput.value = '';
+    appState.searchQuery = '';
+    searchClearBtn.style.display = 'none';
+    filterAndDisplayUpdates();
+    searchInput.focus();
 }
 
 // Filter and Render updates list
@@ -156,8 +197,16 @@ function filterAndDisplayUpdates() {
     const filter = appState.currentFilter;
     
     const filtered = appState.updates.filter(update => {
-        // Filter by Tag
-        const matchesFilter = filter === 'all' || update.type.toLowerCase() === filter.toLowerCase();
+        // Filter by Tag (Total, Feature, Issue, or "Other")
+        let matchesFilter = false;
+        if (filter === 'all') {
+            matchesFilter = true;
+        } else if (filter === 'other') {
+            const typeLower = update.type.toLowerCase();
+            matchesFilter = typeLower !== 'feature' && typeLower !== 'issue' && typeLower !== 'changed' && typeLower !== 'deprecated';
+        } else {
+            matchesFilter = update.type.toLowerCase() === filter.toLowerCase();
+        }
         
         // Filter by Search Query
         const textToSearch = `${update.date} ${update.type} ${update.text_content}`.toLowerCase();
@@ -211,6 +260,9 @@ function renderUpdates(filteredUpdates) {
         else if (typeClass === 'changed') badgeClass = 'badge-changed';
         else if (typeClass === 'deprecated') badgeClass = 'badge-deprecated';
         
+        // Force links inside card content to open in new tab (target="_blank")
+        const processedHtml = update.html_content.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ');
+
         card.innerHTML = `
             <div class="card-header">
                 <div class="card-tags">
@@ -223,7 +275,7 @@ function renderUpdates(filteredUpdates) {
                 </div>
             </div>
             <div class="card-content">
-                ${update.html_content}
+                ${processedHtml}
             </div>
             <div class="card-actions-footer">
                 <button class="card-copy-trigger" data-id="${update.id}">
@@ -512,6 +564,76 @@ function exportToCSV() {
     document.body.removeChild(link);
     
     showToast("CSV exported successfully!");
+}
+
+// Help stats bar triggers filters
+function triggerCategoryFilter(category) {
+    appState.currentFilter = category;
+    
+    // Update active state class on filter buttons
+    filterButtons.forEach(btn => {
+        if (btn.dataset.filter.toLowerCase() === category.toLowerCase()) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    filterAndDisplayUpdates();
+    showToast(`Filtering updates: ${category === 'all' ? 'All' : category}`);
+}
+
+// Keyboard arrow keys navigation between cards
+function handleKeyboardNavigation(e) {
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        return;
+    }
+    
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') {
+        return;
+    }
+    
+    e.preventDefault();
+    
+    const query = appState.searchQuery;
+    const filter = appState.currentFilter;
+    
+    const filtered = appState.updates.filter(update => {
+        let matchesFilter = false;
+        if (filter === 'all') {
+            matchesFilter = true;
+        } else if (filter === 'other') {
+            const typeLower = update.type.toLowerCase();
+            matchesFilter = typeLower !== 'feature' && typeLower !== 'issue' && typeLower !== 'changed' && typeLower !== 'deprecated';
+        } else {
+            matchesFilter = update.type.toLowerCase() === filter.toLowerCase();
+        }
+        
+        const textToSearch = `${update.date} ${update.type} ${update.text_content}`.toLowerCase();
+        const matchesQuery = !query || textToSearch.includes(query);
+        
+        return matchesFilter && matchesQuery;
+    });
+    
+    if (filtered.length === 0) return;
+    
+    let currentIndex = filtered.findIndex(u => u.id === appState.selectedUpdateId);
+    let nextIndex = 0;
+    
+    if (e.key === 'ArrowDown') {
+        nextIndex = currentIndex + 1 < filtered.length ? currentIndex + 1 : 0;
+    } else if (e.key === 'ArrowUp') {
+        nextIndex = currentIndex - 1 >= 0 ? currentIndex - 1 : filtered.length - 1;
+    }
+    
+    const nextUpdate = filtered[nextIndex];
+    selectUpdate(nextUpdate.id);
+    
+    const cardEl = document.getElementById(`card-${nextUpdate.id}`);
+    if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 }
 
 // Toggle page color scheme between dark and light themes

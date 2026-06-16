@@ -247,6 +247,20 @@ h1, h2, h3, h4, h5, h6 {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+    padding: 6px 12px;
+    border-radius: 8px;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .stat-card:hover {
+    background: rgba(0, 0, 0, 0.03);
 }
 
 .stat-label {
@@ -341,6 +355,41 @@ h1, h2, h3, h4, h5, h6 {
     border-color: var(--accent-blue);
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
     background: rgba(255, 255, 255, 0.05);
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 2px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease, transform 0.15s ease;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+}
+
+.search-clear-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+body.light-theme .search-clear-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* Adjust padding for search input to prevent overlapping with clear button */
+.search-box input {
+    padding-right: 32px;
 }
 
 .filter-buttons {
