@@ -612,9 +612,36 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    gap: 12px;
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.card-copy-trigger {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.card-copy-trigger:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+}
+
+.card-copy-trigger svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
 }
 
 .card-tweet-trigger {

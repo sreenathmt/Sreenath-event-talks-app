@@ -17,6 +17,7 @@ const CIRCUMFERENCE = 2 * Math.PI * 10; // r=10 => ~62.83
 
 // DOM Elements
 const refreshBtn = document.getElementById('refresh-btn');
+const exportCsvBtn = document.getElementById('export-csv-btn');
 const spinner = document.getElementById('spinner');
 const syncStatus = document.getElementById('sync-status');
 const updatesList = document.getElementById('updates-list');
@@ -60,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event Listeners
     refreshBtn.addEventListener('click', () => loadReleaseNotes(true));
+    exportCsvBtn.addEventListener('click', exportToCSV);
     retryBtn.addEventListener('click', () => loadReleaseNotes(true));
     searchInput.addEventListener('input', handleSearch);
     
@@ -217,6 +219,13 @@ function renderUpdates(filteredUpdates) {
                 ${update.html_content}
             </div>
             <div class="card-actions-footer">
+                <button class="card-copy-trigger" data-id="${update.id}">
+                    <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span>Copy</span>
+                </button>
                 <button class="card-tweet-trigger" data-id="${update.id}">
                     <svg viewBox="0 0 24 24">
                         <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
@@ -228,11 +237,17 @@ function renderUpdates(filteredUpdates) {
         
         // Add card click listeners
         card.addEventListener('click', (e) => {
-            // Check if tweet button or anchor tag was clicked, if so don't trigger select
-            if (e.target.closest('a') || e.target.closest('.card-tweet-trigger')) {
+            // Check if tweet button, copy button, or anchor tag was clicked, if so don't trigger select
+            if (e.target.closest('a') || e.target.closest('.card-tweet-trigger') || e.target.closest('.card-copy-trigger')) {
                 return;
             }
             selectUpdate(update.id);
+        });
+        
+        // Copy Trigger Button click listener
+        card.querySelector('.card-copy-trigger').addEventListener('click', (e) => {
+            e.stopPropagation();
+            copyCardText(update.id);
         });
         
         // Tweet Trigger Button click listener
@@ -424,4 +439,70 @@ function showToast(message, isError = false) {
     window.toastTimeout = setTimeout(() => {
         toast.classList.remove('show');
     }, 2500);
+}
+
+// Copy granular card text directly
+function copyCardText(id) {
+    const update = appState.updates.find(u => u.id === id);
+    if (!update) return;
+    
+    const formattedText = `📢 BigQuery ${update.type} Update (${update.date}):\n\n${update.text_content}\n\nRead more: ${update.link}`;
+    
+    navigator.clipboard.writeText(formattedText).then(() => {
+        showToast("Update copied to clipboard!");
+    }).catch(err => {
+        console.error('Could not copy card text: ', err);
+        showToast("Failed to copy text", true);
+    });
+}
+
+// Export the currently filtered list of updates to CSV
+function exportToCSV() {
+    const query = appState.searchQuery;
+    const filter = appState.currentFilter;
+    
+    // Filter the items just like we do for display
+    const filtered = appState.updates.filter(update => {
+        const matchesFilter = filter === 'all' || update.type.toLowerCase() === filter.toLowerCase();
+        const textToSearch = `${update.date} ${update.type} ${update.text_content}`.toLowerCase();
+        const matchesQuery = !query || textToSearch.includes(query);
+        return matchesFilter && matchesQuery;
+    });
+
+    if (filtered.length === 0) {
+        showToast("No updates to export!", true);
+        return;
+    }
+
+    // Build CSV Content
+    let csvContent = "\ufeffDate,Type,Link,Content\n"; // Include BOM for proper UTF-8 handling in Excel
+    
+    filtered.forEach(item => {
+        const row = [
+            item.date,
+            item.type,
+            item.link,
+            item.text_content
+        ].map(val => {
+            // Escape double quotes and wrap in quotes
+            const cleanVal = val.replace(/"/g, '""');
+            return `"${cleanVal}"`;
+        }).join(",");
+        csvContent += row + "\n";
+    });
+
+    // Create a download link for the CSV blob
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    
+    const filterSuffix = filter !== 'all' ? `_${filter.toLowerCase()}` : '';
+    link.setAttribute("download", `bigquery_releases${filterSuffix}_${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast("CSV exported successfully!");
 }
